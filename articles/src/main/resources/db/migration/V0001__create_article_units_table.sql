@@ -1,0 +1,5 @@
+CREATE TABLE C_ARTICLE_UNITS (
+    symbol VARCHAR(10) PRIMARY KEY,
+    description VARCHAR(100) NOT NULL,
+    translation_key VARCHAR(100) NOT NULL
+);

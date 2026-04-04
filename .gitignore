@@ -25,5 +25,3 @@ release.properties
 # Logs
 *.log
 
-# Specs (local design docs)
-**/specs/
