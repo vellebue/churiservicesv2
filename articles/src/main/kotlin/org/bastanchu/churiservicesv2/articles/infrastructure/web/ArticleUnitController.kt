@@ -1,6 +1,6 @@
 package org.bastanchu.churiservicesv2.articles.infrastructure.web
 
-import org.bastanchu.churiservicesv2.articles.application.ArticleUnitDto
+import org.bastanchu.churiservicesv2.articles.application.dto.ArticleUnitDto
 import org.bastanchu.churiservicesv2.articles.application.GetAllArticleUnitsUseCase
 import org.bastanchu.churiservicesv2.articles.application.GetArticleUnitBySymbolUseCase
 import io.swagger.v3.oas.annotations.Operation

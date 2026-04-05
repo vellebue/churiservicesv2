@@ -9,7 +9,8 @@ The project is organized into independent modules under the root directory:
 - `[module-name]/org.bastanchu.churiservicesv2.$module-name`: Each microservice follows this internal Clean Architecture structure:
     - `domain`: Entities, value objects, and repository interfaces (No dependencies on frameworks).
     - `application`: Use cases, input/output ports, and DTOs. Use Cases must be divided into UseCase interface (suffixed as UseCase) and service implementation (suffixed as Service).
-      - service: Put service implementations here. Due Postgresql is used please anotate services as @Transactional
+      - service: Put service implementations here. Due Postgresql is used please anotate services as @Transactional.
+      - dto: Put DTO's here. Use Kotlin data classes.
     - `infrastructure`: 
       - `persistence`  Persistence (JPA/Hibernate) 
       - `web` REST controllers (JSON), and external adapters. User standard RESTful conventions for web services.

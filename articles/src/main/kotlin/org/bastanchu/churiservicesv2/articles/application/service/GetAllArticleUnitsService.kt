@@ -1,6 +1,6 @@
 package org.bastanchu.churiservicesv2.articles.application.service
 
-import org.bastanchu.churiservicesv2.articles.application.ArticleUnitDto
+import org.bastanchu.churiservicesv2.articles.application.dto.ArticleUnitDto
 import org.bastanchu.churiservicesv2.articles.application.GetAllArticleUnitsUseCase
 import org.bastanchu.churiservicesv2.articles.domain.ArticleUnitRepository
 import org.springframework.context.MessageSource
