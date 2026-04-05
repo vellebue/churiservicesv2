@@ -11,9 +11,10 @@ The project is organized into independent modules under the root directory:
     - `application`: Use cases, input/output ports, and DTOs. Use Cases must be divided into UseCase interface (suffixed as UseCase) and service implementation (suffixed as Service).
       - service: Put service implementations here. Due Postgresql is used please anotate services as @Transactional.
       - dto: Put DTO's here. Use Kotlin data classes.
+      - command: Commands are specific DTO's used to create or update entities. They should end on Command suffix and should be immutable. Use Kotlin data classes.
     - `infrastructure`: 
       - `persistence`  Persistence (JPA/Hibernate) 
-      - `web` REST controllers (JSON), and external adapters. User standard RESTful conventions for web services.
+      - `web` REST controllers (JSON), and external adapters. User standard RESTful conventions for web services. Configure Hibernate Validator to validate inputs when required.
 
 ## 🛠️ Technical Stack
 - **Language:** Kotlin 1.9+
@@ -51,7 +52,7 @@ The project is organized into independent modules under the root directory:
 
 ## Database and Infrastructure
 
-  - Use Posgresql v16 as database tecnology
+  - Use PostgreSQL v16 as database technology
   - Define a global /docker folder and a /docker folder for each module. On each /docker folder put a docker compose file.
   - For each module there will be a dedicated database defined on its docker compose file.
   - For each module there will be a track record to maintain database scripts. Use flyway to manage those migrations.

@@ -1,0 +1,20 @@
+CREATE SEQUENCE articles_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE article_formats_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE ARTICLES (
+    id BIGINT NOT NULL DEFAULT nextval('articles_seq') PRIMARY KEY,
+    article_id VARCHAR(10) NOT NULL UNIQUE,
+    article_name VARCHAR(150) NOT NULL
+);
+
+CREATE TABLE ARTICLE_FORMATS (
+    id BIGINT NOT NULL DEFAULT nextval('article_formats_seq') PRIMARY KEY,
+    article_id BIGINT NOT NULL REFERENCES ARTICLES(id) ON DELETE CASCADE,
+    description VARCHAR(50) NOT NULL,
+    reference_unit BOOLEAN NOT NULL DEFAULT FALSE,
+    ean_code VARCHAR(20),
+    ean_type VARCHAR(10),
+    sale_unit BOOLEAN NOT NULL DEFAULT FALSE,
+    conversion_factor NUMERIC NOT NULL,
+    article_unit_id VARCHAR(10) NOT NULL REFERENCES C_ARTICLE_UNITS(symbol)
+);
