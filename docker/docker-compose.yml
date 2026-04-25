@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: password
     ports:
-      - "5433:5432"
+      - "5435:5432"
     networks:
       - churi-network
     volumes:
@@ -18,14 +18,14 @@ services:
     container_name: keycloak
     command: start-dev
     environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db
-      KC_DB_USERNAME: keycloak_user
-      KC_DB_PASSWORD: password
-      KC_HOSTNAME: localhost
-      KC_HTTP_ENABLED: "true"
+      KEYCLOAK_DATABASE_VENDOR: postgresql
+      KEYCLOAK_DATABASE_HOST: churierpv2-keycloak-db
+      KEYCLOAK_DATABASE_NAME: keycloak_db
+      KEYCLOAK_DATABASE_USER: keycloak_user
+      KEYCLOAK_DATABASE_SCHEMA: public
+      KEYCLOAK_DATABASE_PASSWORD: password
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN_PASSWORD: Pa55w0rd
     ports:
       - "9080:8080"
     networks:

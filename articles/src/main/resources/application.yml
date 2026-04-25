@@ -2,7 +2,7 @@ spring:
   application:
     name: articles
   datasource:
-    url: jdbc:postgresql://localhost:5432/articles_db
+    url: jdbc:postgresql://localhost:5436/articles_db
     username: articles_user
     password: password
     driver-class-name: org.postgresql.Driver
@@ -17,6 +17,12 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9080/realms/churiservicesv2
+          jwk-set-uri: http://localhost:9080/realms/churiservicesv2/protocol/openid-connect/certs
 
 server:
   port: 8080
