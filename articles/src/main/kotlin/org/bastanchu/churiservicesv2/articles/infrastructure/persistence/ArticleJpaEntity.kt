@@ -10,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.time.LocalDate
 
 @Entity
 @Table(name = "ARTICLES")
@@ -24,6 +25,12 @@ class ArticleJpaEntity(
 
     @Column(name = "article_name", nullable = false, length = 150)
     var articleName: String = "",
+
+    @Column(name = "begin_validity_date", nullable = false)
+    var beginValidityDate: LocalDate = LocalDate.now(),
+
+    @Column(name = "end_validity_date")
+    var endValidityDate: LocalDate? = null,
 
     @OneToMany(mappedBy = "article", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var formats: MutableList<ArticleFormatJpaEntity> = mutableListOf()

@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class CreateArticleUseCaseTest {
@@ -32,6 +33,9 @@ class CreateArticleUseCaseTest {
 
     @InjectMocks
     private lateinit var useCase: CreateArticleService
+
+    private val beginValidity = LocalDate.of(2026, 1, 1)
+    private val endValidity = LocalDate.of(2026, 12, 31)
 
     private val validFormatCommand = ArticleFormatCommand(
         description = "Unit",
@@ -46,6 +50,8 @@ class CreateArticleUseCaseTest {
     private val validCommand = CreateArticleCommand(
         articleId = "ART001",
         articleName = "Test Article",
+        beginValidityDate = beginValidity,
+        endValidityDate = endValidity,
         formats = listOf(validFormatCommand)
     )
 
@@ -55,6 +61,8 @@ class CreateArticleUseCaseTest {
             id = 1L,
             articleId = "ART001",
             articleName = "Test Article",
+            beginValidityDate = beginValidity,
+            endValidityDate = endValidity,
             formats = listOf(
                 ArticleFormat(
                     id = 1L,
@@ -78,8 +86,54 @@ class CreateArticleUseCaseTest {
         assertEquals(1L, result.id)
         assertEquals("ART001", result.articleId)
         assertEquals("Test Article", result.articleName)
+        assertEquals(beginValidity, result.beginValidityDate)
+        assertEquals(endValidity, result.endValidityDate)
         assertEquals(1, result.formats.size)
         assertEquals(true, result.formats[0].referenceUnit)
+    }
+
+    @Test
+    fun `should create article without end validity date`() {
+        val savedArticle = Article(
+            id = 1L,
+            articleId = "ART001",
+            articleName = "Test Article",
+            beginValidityDate = beginValidity,
+            endValidityDate = null,
+            formats = listOf(
+                ArticleFormat(
+                    id = 1L,
+                    description = "Unit",
+                    referenceUnit = true,
+                    eanCode = "1234567890123",
+                    eanType = "EAN13",
+                    saleUnit = true,
+                    conversionFactor = BigDecimal.ONE,
+                    articleUnitId = "UN"
+                )
+            )
+        )
+
+        `when`(articleUnitRepository.findBySymbol("UN"))
+            .thenReturn(ArticleUnit(symbol = "UN", description = "Unit", translationKey = "article.unit.un"))
+        whenever(articleRepository.save(any())).thenReturn(savedArticle)
+
+        val result = useCase.execute(validCommand.copy(endValidityDate = null))
+
+        assertEquals(beginValidity, result.beginValidityDate)
+        assertEquals(null, result.endValidityDate)
+    }
+
+    @Test
+    fun `should throw when end validity date is before begin validity date`() {
+        val command = validCommand.copy(
+            beginValidityDate = LocalDate.of(2026, 6, 1),
+            endValidityDate = LocalDate.of(2026, 1, 1)
+        )
+
+        assertThrows(InvalidArticleException::class.java) {
+            useCase.execute(command)
+        }
     }
 
     @Test

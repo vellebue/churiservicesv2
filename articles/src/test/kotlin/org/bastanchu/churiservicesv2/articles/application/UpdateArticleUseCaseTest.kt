@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class UpdateArticleUseCaseTest {
@@ -34,10 +35,15 @@ class UpdateArticleUseCaseTest {
     @InjectMocks
     private lateinit var useCase: UpdateArticleService
 
+    private val beginValidity = LocalDate.of(2026, 1, 1)
+    private val endValidity = LocalDate.of(2026, 12, 31)
+
     private val existingArticle = Article(
         id = 1L,
         articleId = "ART001",
         articleName = "Old Name",
+        beginValidityDate = beginValidity,
+        endValidityDate = endValidity,
         formats = listOf(
             ArticleFormat(
                 id = 1L, description = "Unit", referenceUnit = true,
@@ -60,6 +66,8 @@ class UpdateArticleUseCaseTest {
     private val validCommand = UpdateArticleCommand(
         articleId = "ART001",
         articleName = "Updated Name",
+        beginValidityDate = beginValidity,
+        endValidityDate = endValidity,
         formats = listOf(validFormatCommand)
     )
 
@@ -69,6 +77,8 @@ class UpdateArticleUseCaseTest {
             id = 1L,
             articleId = "ART001",
             articleName = "Updated Name",
+            beginValidityDate = beginValidity,
+            endValidityDate = endValidity,
             formats = listOf(
                 ArticleFormat(
                     id = 2L, description = "Box", referenceUnit = true,
@@ -86,6 +96,8 @@ class UpdateArticleUseCaseTest {
         val result = useCase.execute(1L, validCommand)
 
         assertEquals("Updated Name", result.articleName)
+        assertEquals(beginValidity, result.beginValidityDate)
+        assertEquals(endValidity, result.endValidityDate)
         assertEquals(1, result.formats.size)
         assertEquals("Box", result.formats[0].description)
     }
@@ -96,6 +108,20 @@ class UpdateArticleUseCaseTest {
 
         assertThrows(ArticleNotFoundException::class.java) {
             useCase.execute(99L, validCommand)
+        }
+    }
+
+    @Test
+    fun `should throw when end validity date is before begin validity date`() {
+        val command = validCommand.copy(
+            beginValidityDate = LocalDate.of(2026, 6, 1),
+            endValidityDate = LocalDate.of(2026, 1, 1)
+        )
+
+        `when`(articleRepository.findById(1L)).thenReturn(existingArticle)
+
+        assertThrows(InvalidArticleException::class.java) {
+            useCase.execute(1L, command)
         }
     }
 

@@ -14,6 +14,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class GetArticleByIdUseCaseTest {
@@ -28,10 +29,27 @@ class GetArticleByIdUseCaseTest {
         id = 1L,
         articleId = "ART001",
         articleName = "Test Article",
+        beginValidityDate = LocalDate.of(2026, 1, 1),
+        endValidityDate = LocalDate.of(2026, 12, 31),
         formats = listOf(
             ArticleFormat(
                 id = 1L, description = "Unit", referenceUnit = true,
                 eanCode = "1234567890123", eanType = "EAN13", saleUnit = true,
+                conversionFactor = BigDecimal.ONE, articleUnitId = "UN"
+            )
+        )
+    )
+
+    private val existingOutdatedArticle = Article(
+        id = 2L,
+        articleId = "ART002",
+        articleName = "Test Article Outdated",
+        beginValidityDate = LocalDate.of(2025, 1, 1),
+        endValidityDate = LocalDate.of(2025, 12, 31),
+        formats = listOf(
+            ArticleFormat(
+                id = 2L, description = "Unit", referenceUnit = true,
+                eanCode = "123456789012", eanType = "EAN13", saleUnit = true,
                 conversionFactor = BigDecimal.ONE, articleUnitId = "UN"
             )
         )
@@ -46,6 +64,19 @@ class GetArticleByIdUseCaseTest {
         assertEquals(1L, result.id)
         assertEquals("ART001", result.articleId)
         assertEquals("Test Article", result.articleName)
+        assertEquals(1, result.formats.size)
+        assertEquals("UN", result.formats[0].articleUnitId)
+    }
+
+    @Test
+    fun `should return outdated article when found`() {
+        `when`(articleRepository.findById(2L)).thenReturn(existingOutdatedArticle)
+
+        val result = useCase.execute(2L)
+
+        assertEquals(2L, result.id )
+        assertEquals("ART002", result.articleId)
+        assertEquals("Test Article Outdated", result.articleName)
         assertEquals(1, result.formats.size)
         assertEquals("UN", result.formats[0].articleUnitId)
     }

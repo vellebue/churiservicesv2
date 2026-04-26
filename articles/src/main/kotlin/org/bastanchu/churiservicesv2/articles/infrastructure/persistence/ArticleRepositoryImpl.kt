@@ -4,6 +4,7 @@ import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 class ArticleRepositoryImpl(
@@ -15,6 +16,8 @@ class ArticleRepositoryImpl(
             val existing = jpaRepository.findById(article.id).orElseThrow()
             existing.articleId = article.articleId
             existing.articleName = article.articleName
+            existing.beginValidityDate = article.beginValidityDate
+            existing.endValidityDate = article.endValidityDate
             existing.formats.clear()
             article.formats.forEach { fmt ->
                 existing.formats.add(fmt.toJpaEntity(existing))
@@ -23,7 +26,9 @@ class ArticleRepositoryImpl(
         } else {
             val newEntity = ArticleJpaEntity(
                 articleId = article.articleId,
-                articleName = article.articleName
+                articleName = article.articleName,
+                beginValidityDate = article.beginValidityDate,
+                endValidityDate = article.endValidityDate
             )
             article.formats.forEach { fmt ->
                 newEntity.formats.add(fmt.toJpaEntity(newEntity))
@@ -43,16 +48,23 @@ class ArticleRepositoryImpl(
         jpaRepository.deleteById(id)
     }
 
-    override fun findByFilter(articleIdPattern: String?, articleNamePattern: String?): List<Article> {
+    override fun findByFilter(
+        articleIdPattern: String?,
+        articleNamePattern: String?,
+        referenceDate: LocalDate
+    ): List<Article> {
         val sqlArticleId = articleIdPattern?.replace('*', '%')
         val sqlArticleName = articleNamePattern?.replace('*', '%')
-        return jpaRepository.findByFilter(sqlArticleId, sqlArticleName).map { it.toDomain() }
+        return jpaRepository.findByFilter(sqlArticleId, sqlArticleName, referenceDate)
+            .map { it.toDomain() }
     }
 
     private fun ArticleJpaEntity.toDomain(): Article = Article(
         id = id,
         articleId = articleId,
         articleName = articleName,
+        beginValidityDate = beginValidityDate,
+        endValidityDate = endValidityDate,
         formats = formats.map { it.toDomain() }
     )
 

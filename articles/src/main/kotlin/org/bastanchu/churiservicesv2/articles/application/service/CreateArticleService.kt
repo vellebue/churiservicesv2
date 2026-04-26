@@ -19,11 +19,14 @@ class CreateArticleService(
 ) : CreateArticleUseCase {
 
     override fun execute(command: CreateArticleCommand): ArticleDto {
+        validateValidityDates(command.beginValidityDate, command.endValidityDate)
         validateFormats(command)
 
         val article = Article(
             articleId = command.articleId,
             articleName = command.articleName,
+            beginValidityDate = command.beginValidityDate,
+            endValidityDate = command.endValidityDate,
             formats = command.formats.map { fmt ->
                 ArticleFormat(
                     description = fmt.description,
@@ -39,6 +42,12 @@ class CreateArticleService(
 
         val saved = articleRepository.save(article)
         return saved.toDto()
+    }
+
+    private fun validateValidityDates(begin: java.time.LocalDate, end: java.time.LocalDate?) {
+        if (end != null && end.isBefore(begin)) {
+            throw InvalidArticleException("End validity date must be on or after begin validity date")
+        }
     }
 
     private fun validateFormats(command: CreateArticleCommand) {

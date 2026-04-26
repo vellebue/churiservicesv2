@@ -9,6 +9,8 @@ fun Article.toDto(): ArticleDto = ArticleDto(
     id = id!!,
     articleId = articleId,
     articleName = articleName,
+    beginValidityDate = beginValidityDate,
+    endValidityDate = endValidityDate,
     formats = formats.map { it.toDto() }
 )
 

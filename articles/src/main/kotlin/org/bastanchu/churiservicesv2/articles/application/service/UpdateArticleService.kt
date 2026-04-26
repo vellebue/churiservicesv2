@@ -23,12 +23,15 @@ class UpdateArticleService(
         articleRepository.findById(id)
             ?: throw ArticleNotFoundException(id)
 
+        validateValidityDates(command.beginValidityDate, command.endValidityDate)
         validateFormats(command)
 
         val updatedArticle = Article(
             id = id,
             articleId = command.articleId,
             articleName = command.articleName,
+            beginValidityDate = command.beginValidityDate,
+            endValidityDate = command.endValidityDate,
             formats = command.formats.map { fmt ->
                 ArticleFormat(
                     description = fmt.description,
@@ -44,6 +47,12 @@ class UpdateArticleService(
 
         val saved = articleRepository.save(updatedArticle)
         return saved.toDto()
+    }
+
+    private fun validateValidityDates(begin: java.time.LocalDate, end: java.time.LocalDate?) {
+        if (end != null && end.isBefore(begin)) {
+            throw InvalidArticleException("End validity date must be on or after begin validity date")
+        }
     }
 
     private fun validateFormats(command: UpdateArticleCommand) {

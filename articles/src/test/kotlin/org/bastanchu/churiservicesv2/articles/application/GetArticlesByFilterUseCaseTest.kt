@@ -11,9 +11,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import java.math.BigDecimal
+import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class GetArticlesByFilterUseCaseTest {
@@ -24,11 +28,16 @@ class GetArticlesByFilterUseCaseTest {
     @InjectMocks
     private lateinit var useCase: GetArticlesByFilterService
 
+    private val beginValidity = LocalDate.of(2026, 1, 1)
+    private val endValidity = LocalDate.of(2026, 12, 31)
+
     private val articles = listOf(
         Article(
             id = 1L,
             articleId = "ART001",
             articleName = "Coca Cola",
+            beginValidityDate = beginValidity,
+            endValidityDate = endValidity,
             formats = listOf(
                 ArticleFormat(
                     id = 1L, description = "Unit", referenceUnit = true,
@@ -41,6 +50,8 @@ class GetArticlesByFilterUseCaseTest {
             id = 2L,
             articleId = "ART002",
             articleName = "Coca Cola Zero",
+            beginValidityDate = beginValidity,
+            endValidityDate = null,
             formats = listOf(
                 ArticleFormat(
                     id = 2L, description = "Bottle", referenceUnit = true,
@@ -48,13 +59,13 @@ class GetArticlesByFilterUseCaseTest {
                     conversionFactor = BigDecimal.ONE, articleUnitId = "BOT"
                 )
             )
-        )
-    )
+        ))
 
     @Test
     fun `should return articles matching filter`() {
         val filter = ArticleFilterDto(articleId = "ART*", articleName = null)
-        `when`(articleRepository.findByFilter("ART*", null)).thenReturn(articles)
+        whenever(articleRepository.findByFilter(eq("ART*"), eq(null), any()))
+            .thenReturn(articles)
 
         val result = useCase.execute(filter)
 
@@ -66,7 +77,7 @@ class GetArticlesByFilterUseCaseTest {
     @Test
     fun `should return empty list when no match`() {
         val filter = ArticleFilterDto(articleId = "ZZZ*", articleName = null)
-        `when`(articleRepository.findByFilter("ZZZ*", null)).thenReturn(emptyList())
+        whenever(articleRepository.findByFilter(eq("ZZZ*"), eq(null), any())).thenReturn(emptyList())
 
         val result = useCase.execute(filter)
 
@@ -76,10 +87,21 @@ class GetArticlesByFilterUseCaseTest {
     @Test
     fun `should return all articles when filter is empty`() {
         val filter = ArticleFilterDto()
-        `when`(articleRepository.findByFilter(null, null)).thenReturn(articles)
+        whenever(articleRepository.findByFilter(eq(null), eq(null), any())).thenReturn(articles)
 
         val result = useCase.execute(filter)
 
         assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should pass current date as reference for validity filtering`() {
+        val filter = ArticleFilterDto()
+        whenever(articleRepository.findByFilter(eq(null), eq(null), any<LocalDate>()))
+            .thenReturn(emptyList())
+
+        useCase.execute(filter)
+
+        verify(articleRepository).findByFilter(eq(null), eq(null), eq(LocalDate.now()))
     }
 }
