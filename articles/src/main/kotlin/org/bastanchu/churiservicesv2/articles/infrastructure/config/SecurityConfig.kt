@@ -28,7 +28,9 @@ class SecurityConfig {
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
                         "/swagger-ui/**",
-                        "/actuator/**"
+                        "/actuator/**",
+                        "/api/ping",
+                        "/api/ping/**"
                     ).permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()

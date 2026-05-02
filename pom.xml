@@ -24,6 +24,7 @@
 
     <modules>
         <module>articles</module>
+        <module>common</module>
     </modules>
 
     <dependencies>
