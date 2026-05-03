@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: customers
+  datasource:
+    url: jdbc:postgresql://localhost:5437/customers_db
+    username: customers_user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9080/realms/churiservicesv2
+          jwk-set-uri: http://localhost:9080/realms/churiservicesv2/protocol/openid-connect/certs
+
+server:
+  port: 8081
+
+info:
+  app:
+    name: churiservices-customers
+    dependencies:
+      database:
+        name: churiservices-customers-db
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

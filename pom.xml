@@ -25,6 +25,7 @@
     <modules>
         <module>articles</module>
         <module>common</module>
+        <module>customers</module>
     </modules>
 
     <dependencies>
