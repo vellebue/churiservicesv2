@@ -3,7 +3,7 @@ package org.bastanchu.churiservicesv2.articles
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["org.bastanchu.churiservicesv2"])
 class ArticlesApplication
 
 fun main(args: Array<String>) {
