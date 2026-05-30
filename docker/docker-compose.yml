@@ -1,7 +1,7 @@
 services:
   keycloak-db:
     image: postgres:16.13-alpine3.23
-    container_name: keycloak-db
+    container_name: churierpv2-keycloak-db
     environment:
       POSTGRES_DB: keycloak_db
       POSTGRES_USER: keycloak_user
@@ -18,16 +18,17 @@ services:
     container_name: keycloak
     command: start-dev
     environment:
-      KEYCLOAK_DATABASE_VENDOR: postgresql
-      KEYCLOAK_DATABASE_HOST: churierpv2-keycloak-db
-      KEYCLOAK_DATABASE_NAME: keycloak_db
-      KEYCLOAK_DATABASE_USER: keycloak_user
-      KEYCLOAK_DATABASE_SCHEMA: public
-      KEYCLOAK_DATABASE_PASSWORD: password
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: Pa55w0rd
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: password
+      KC_DB_SCHEMA: public
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: Pa55w0rd
     ports:
-      - "9080:8080"
+      - "9080:8080" # Ordinary port
+      - "9100:9000" # Healthcheck port
     networks:
       - churi-network
     depends_on:

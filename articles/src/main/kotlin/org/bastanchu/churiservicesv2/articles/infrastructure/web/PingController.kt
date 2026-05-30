@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.bastanchu.churiservicesv2.articles.application.PingUseCase
 import org.bastanchu.churiservicesv2.common.application.dto.PingStatusDto
+import org.bastanchu.churiservicesv2.common.infrastructure.logging.LogEntry
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/ping")
 @Tag(name = "Ping", description = "Microservice status and dependency health probe")
+@LogEntry
 class PingController(
     private val pingUseCase: PingUseCase
 ) {

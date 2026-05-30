@@ -14,6 +14,7 @@ import org.bastanchu.churiservicesv2.articles.application.command.CreateArticleC
 import org.bastanchu.churiservicesv2.articles.application.command.UpdateArticleCommand
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleDto
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleFilterDto
+import org.bastanchu.churiservicesv2.common.infrastructure.logging.LogEntry
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/articles")
 @Tag(name = "Articles", description = "Operations for managing articles and their formats")
+@LogEntry
 class ArticleController(
     private val createArticleUseCase: CreateArticleUseCase,
     private val updateArticleUseCase: UpdateArticleUseCase,

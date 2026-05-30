@@ -80,6 +80,71 @@ The project is organized into independent modules under the root directory:
 - Define unit tests for each Use Case.
 - Define architecture tests to ensure clean architecture.
 
+## Logs
+
+- **Stack:** SLF4J as the logging facade, Logback as the backend, JSON encoding
+    via `logstash-logback-encoder`. The shared `logback-spring.xml` and the
+    encoder dependency live in the `common` module so every microservice
+    inherits the same configuration via component scan / classpath.
+- **Tracing context:**
+    - Use the W3C Trace Context header `traceparent` to receive and propagate
+      the **correlation id** (end-to-end across services). When `traceparent`
+      is absent, generate one on entry.
+    - Generate a per-call **transaction id** (UUID) at every microservice
+      entry point. It is local to that service and is **not** propagated.
+    - Distinction: `correlationId` ties a full distributed call chain;
+      `transactionId` ties a single microservice invocation.
+    - Both ids are populated into **SLF4J MDC** by a shared
+      `OncePerRequestFilter` (HTTP) and a Kafka/queue `RecordInterceptor`
+      (messaging), both defined in `common`. Never concatenate ids into log
+      messages by hand — always rely on MDC.
+    - Propagate `traceparent` on outbound HTTP calls (via a
+      `RestClient`/`WebClient` interceptor) and on Kafka record headers.
+- **Output destination:**
+    - In containerized environments (the default — every module ships with
+      Docker Compose), logs go to **stdout** so the Docker logging driver
+      captures them. Do not write log files inside containers.
+    - For local development, a rolling file appender writes to
+      `./logs/${module-name}.log`.
+- **Rotation policy (local file appender):**
+    - `SizeAndTimeBasedRollingPolicy` — active file `${module-name}.log`,
+      rotated files `${module-name}-%d{yyyy-MM-dd}.%i.log.gz`.
+    - Max size 10 MB per file, maximum 5 archived files, oldest deleted.
+- **Async appender:** wrap file/stdout appenders in `AsyncAppender` so log
+    I/O never blocks request threads (especially during rotation).
+- **Mandatory JSON fields per log entry:**
+    - `timestamp` (ISO-8601, UTC)
+    - `level` (ERROR / WARN / INFO / DEBUG)
+    - `logger` (logger name)
+    - `thread` (thread name)
+    - `module` (microservice name)
+    - `correlationId` (from MDC)
+    - `transactionId` (from MDC)
+    - `message`
+    - `stack_trace` (only when an exception is logged)
+    - `body` (optional, redacted — see PII rules below)
+- **Log levels — when to use each:**
+    - `ERROR`: unexpected failures requiring attention / alerting.
+    - `WARN`: degraded but handled situations (retry succeeded, fallback used).
+    - `INFO`: state transitions, entry-point invocations, lifecycle events.
+    - `DEBUG`: developer diagnostics. Disabled in production.
+- **Entry-point logging:**
+    - Implemented via a `@LogEntry` AOP aspect (in `common`) applied to
+      controllers, event listeners, and queue receivers. Controllers stay
+      clean — no manual `log.info(...)` boilerplate per endpoint.
+    - The aspect logs the entry-point name, HTTP method/route (or topic/queue
+      name), and the request body **at DEBUG level only**.
+    - At INFO level, only metadata is logged (entry-point name, ids, status),
+      never full bodies.
+- **PII and secret redaction:**
+    - A redaction filter masks values for any field whose name matches the
+      denylist: `authorization`, `password`, `token`, `secret`, `apiKey`,
+      `creditCard`, `ssn`. Denylist lives in `common` and is overridable
+      per module via configuration.
+    - Headers `Authorization`, `Cookie`, `Set-Cookie` are never logged.
+    - Never log full request/response bodies at INFO; DEBUG only, and only
+      after redaction.
+
 ## Commits
 
 - Use conventional commits to report commits.

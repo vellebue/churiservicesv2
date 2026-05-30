@@ -3,6 +3,7 @@ package org.bastanchu.churiservicesv2.articles.infrastructure.web
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleUnitDto
 import org.bastanchu.churiservicesv2.articles.application.GetAllArticleUnitsUseCase
 import org.bastanchu.churiservicesv2.articles.application.GetArticleUnitBySymbolUseCase
+import org.bastanchu.churiservicesv2.common.infrastructure.logging.LogEntry
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/article-units")
 @Tag(name = "Article Units", description = "Operations for managing article measure units")
+@LogEntry
 class ArticleUnitController(
     private val getAllArticleUnitsUseCase: GetAllArticleUnitsUseCase,
     private val getArticleUnitBySymbolUseCase: GetArticleUnitBySymbolUseCase
