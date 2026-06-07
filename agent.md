@@ -56,6 +56,12 @@ The project is organized into independent modules under the root directory:
 - Use swagger to document JSON web services.
 - Each web controller will be documented using swagger.
 
+## Working languages
+
+- There will be a resource bundle folder (under main resources folder) to store messages properties files to map text keys and their traslations.
+- Supported languages are English, Spanish, German and French.
+- When retrieving DB fields with text keys they will be resolved into JPA entities, dtos... traslated depending of current context active locale.
+
 ## Security
 
 - **Model:** OAuth2 Resource Server with JWT bearer tokens. Identity provider is Keycloak (realm `churiservicesv2`); per-environment `issuer-uri` and `jwk-set-uri` go in each module's `application.yml` under `spring.security.oauth2.resourceserver.jwt`.
