@@ -41,6 +41,55 @@ The project is organized into independent modules under the root directory:
     - Map database entities to domain entities using mappers.
 4. **Error Handling:** Use a global exception handler (`@RestControllerAdvice`) in `infrastructure/web` to map domain exceptions to standard HTTP status codes. Prefer Spring 6 `ProblemDetail` (RFC 7807) for response bodies.
 
+5. **Pagination**
+
+  - Pagination will be applied only when explicitly required on get operations that return list results.
+  - All filtered GET (list) operations across every module (customers, delegations, articles, and any future entity) MUST return paged results using a single, entity-agnostic offset/limit contract. Only the type of the items in `content` varies per use case; the request shape, the response envelope, the validation rules, and the Swagger rendering are identical everywhere and are provided by the reusable components in the `common` module described below.
+
+  - Request parameters
+
+    - `offset`: 0-based index of the first item to return. Optional, default `0`. Must be >= 0.
+    - `limit`: maximum number of items to return. Optional, default `20`, max `100`. Must be > 0.
+    - `sort`: optional, repeatable. Format `field,(asc|desc)`. If direction is omitted, `asc` is assumed. If `sort` is not provided a stable default defined per use case is applied. Sort criteria MUST always be deterministic, so the per-use-case default tie-breaks by the entity primary key, and the tie-breaker direction is ALWAYS `asc` regardless of the direction of any user-supplied criterion.
+
+    Invalid values (negative `offset`, `limit` out of range, unknown sort field, unknown sort direction, malformed `sort` string) MUST result in a `400` validation error and no DB access.
+
+  - Response shape
+
+    Filtered list endpoints MUST return:
+
+    - `content`: array of result items (item type defined by the use case).
+    - `offset`: offset actually applied.
+    - `limit`: limit actually applied.
+    - `hasMore`: `true` if at least one more row exists past the returned page, `false` otherwise.
+    - `sort`: array of applied sort criteria echoed back as `field,direction`, including the tie-breaker.
+
+    There is no total count by design — the cost of counting filtered result sets is avoided.
+
+  - Empty results return `content: []` and `hasMore: false`; never a `404`.
+
+  - Implementation pattern
+
+    - To compute `hasMore` without a second `COUNT` query, the persistence adapter fetches `limit + 1` rows. If the fetched list size is greater than `limit`, set `hasMore = true` and trim the extra row before mapping; otherwise `hasMore = false`.
+    - Sort field allow-listing, applying the default, and appending the tie-breaker are NOT controller-level concerns — each use case declares them once via the shared `SortSpec` helper and the resolved `PageRequest` flows to the repository.
+
+  - Reusable components (live in `common`, consumed by every paged use case)
+
+    - `domain/`:
+      - `FilteredPage<T>` — response carrier (`content`, `offset`, `limit`, `hasMore`, `sort`).
+      - `PageRequest` — input carrier (`offset`, `limit`, `sort`).
+      - `SortCriterion(field, direction)` and `enum SortDirection { ASC, DESC }`.
+      - `PaginationLimits` — single source of truth for `DEFAULT_OFFSET = 0L`, `DEFAULT_LIMIT = 20`, `MAX_LIMIT = 100`.
+      - `InvalidPageRequestException` — mapped to `400 ProblemDetail` by the global exception handler.
+    - `application/`:
+      - `SortSpec(allowedFields, default, tieBreaker)` with `resolve(requested): List<SortCriterion>` — validates against the allow-list, applies the default when none supplied, and always appends the tie-breaker (in `asc`) when not already present.
+    - `infrastructure/persistence/`:
+      - `OffsetLimitPageable` — `Pageable` implementation that exposes the real offset to Spring Data without misrepresenting page numbers.
+      - `PageRequest.toPageable()` and a `List<E>.toFilteredPage(request, mapper)` extension that encapsulates the `limit + 1` fetch-and-trim convention.
+    - `infrastructure/web/`:
+      - `PageQueryParams` — `@ParameterObject` DTO with jakarta validation (`@Min(0) offset`, `@Min(1) @Max(MAX_LIMIT) limit`, `sort: List<String>?`) and `toPageRequest(): PageRequest`. Every paged controller in every module accepts this same DTO so Swagger renders `offset` / `limit` / `sort` flat and identically across the whole API surface.
+
+
 ## 🚀 Key Commands
 - `./mvnw clean install`: Build all modules and run tests.
 - `./mvnw spring-boot:run -pl :[module-name]`: Run a specific microservice.
@@ -51,18 +100,18 @@ The project is organized into independent modules under the root directory:
 - Always use constructor injection instead of `@Autowired`.
 - Ensure all REST endpoints follow JSON naming conventions using `camelCase` for field names (Jackson default; matches Kotlin property naming and JS/TS clients).
 
-## Documentation
+## 🗎 Documentation
 
 - Use swagger to document JSON web services.
 - Each web controller will be documented using swagger.
 
-## Working languages
+## 🔤 Working languages
 
 - There will be a resource bundle folder (under main resources folder) to store messages properties files to map text keys and their traslations.
 - Supported languages are English, Spanish, German and French.
 - When retrieving DB fields with text keys they will be resolved into JPA entities, dtos... traslated depending of current context active locale.
 
-## Security
+## 🔒 Security
 
 - **Model:** OAuth2 Resource Server with JWT bearer tokens. Identity provider is Keycloak (realm `churiservicesv2`); per-environment `issuer-uri` and `jwk-set-uri` go in each module's `application.yml` under `spring.security.oauth2.resourceserver.jwt`.
 - **Where it lives:** A single `SecurityConfig` lives in `common/infrastructure/config/` and is shared across modules. Each module's `@SpringBootApplication` must declare `scanBasePackages = ["org.bastanchu.churiservicesv2"]` so the bean is picked up by component scan — do **not** duplicate `SecurityConfig` per module.
@@ -74,19 +123,19 @@ The project is organized into independent modules under the root directory:
 - **Authorities:** A `JwtAuthenticationConverter` merges OAuth2 scopes with Keycloak realm roles. Realm roles are mapped to authorities prefixed with `ROLE_` (e.g. realm role `articles_admin` → authority `ROLE_articles_admin`), so use `@PreAuthorize("hasRole('articles_admin')")` on protected methods.
 - **Method security:** Prefer `@PreAuthorize` on UseCase service methods over URL-pattern rules when authorization depends on roles or arguments.
 
-## Database and Infrastructure
+## ⚙️ Database and Infrastructure
 
 - Use PostgreSQL v16 as database technology
 - Define a global /docker folder and a /docker folder for each module. On each /docker folder put a docker compose file.
 - For each module there will be a dedicated database defined on its docker compose file.
 - For each module there will be a track record to maintain database scripts. Use flyway to manage those migrations.
 
-## Tests
+## ✅ Tests
 
 - Define unit tests for each Use Case.
 - Define architecture tests to ensure clean architecture.
 
-## Logs
+## 📜 Logs
 
 - **Stack:** SLF4J as the logging facade, Logback as the backend, JSON encoding
     via `logstash-logback-encoder`. The shared `logback-spring.xml` and the
@@ -151,6 +200,6 @@ The project is organized into independent modules under the root directory:
     - Never log full request/response bodies at INFO; DEBUG only, and only
       after redaction.
 
-## Commits
+## 📌 Commits
 
 - Use conventional commits to report commits.

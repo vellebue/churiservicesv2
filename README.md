@@ -67,3 +67,88 @@ Annotate controllers, event listeners, and queue receivers with
 Sensitive keys (`authorization`, `password`, `token`, `secret`, `apiKey`,
 `creditCard`, `ssn`) are masked by the `LogRedactor`. The denylist can be
 overridden per module via `logging.redaction.denylist` in `application.yml`.
+
+## Pagination
+
+All list-style endpoints share a single offset/limit pagination contract.
+Callers ask for a window of results with three query parameters and get
+back a page object that says whether more results exist.
+
+### Request — query parameters
+
+| Param    | Type            | Default | Constraints         | Notes                                                 |
+|----------|-----------------|---------|---------------------|-------------------------------------------------------|
+| `offset` | long            | `0`     | `>= 0`              | 0-based index of the first item to return.            |
+| `limit`  | int             | `20`    | `1..100`            | Maximum number of items in the page.                  |
+| `sort`   | repeated string | _none_  | `field,(asc\|desc)` | Repeatable. Direction defaults to `asc` when omitted. |
+
+All three are optional. Omitting them returns the first 20 items in the
+endpoint's default order.
+
+Example call:
+
+```
+GET /customers?offset=40&limit=20&sort=commercialName,asc&sort=id,asc
+```
+
+### Response — page body
+
+Paged endpoints return a JSON object with the following shape:
+
+```json
+{
+  "content":  [ /* ...up to `limit` items... */ ],
+  "offset":   40,
+  "limit":    20,
+  "hasMore":  true,
+  "sort":     [ "commercialName,asc", "id,asc" ]
+}
+```
+
+- `content` — the items in the requested window.
+- `offset` / `limit` — echoed back from the request (after defaults).
+- `hasMore` — `true` if at least one more item exists after this window;
+  use it to decide whether to request the next page.
+- `sort` — the effective sort actually applied (may include a tie-breaker
+  added by the server to keep ordering deterministic across pages).
+
+There is **no** `totalElements` or `totalPages` field: paging is forward
+only via `hasMore`, which avoids an extra `COUNT(*)` on every call.
+
+### Walking through results
+
+To page forward, increment `offset` by `limit` until `hasMore` is `false`:
+
+```
+GET /customers?offset=0&limit=20    → hasMore: true
+GET /customers?offset=20&limit=20   → hasMore: true
+GET /customers?offset=40&limit=20   → hasMore: false   ← last page
+```
+
+### Sorting rules
+
+- Each `sort` entry is `field` or `field,(asc|desc)`; omitting the
+  direction means `asc`.
+- Each endpoint whitelists the fields it accepts. Unknown fields are
+  rejected (see error responses below).
+- If the caller's sort does not already include the endpoint's
+  tie-breaker field (typically the primary key), the server appends it.
+  This is what makes offset/limit pagination stable across calls.
+
+### Error responses
+
+Any invalid pagination input produces HTTP **400 Bad Request** with an
+RFC 7807 `ProblemDetail` body:
+
+```json
+{
+  "type":   "about:blank",
+  "title":  "Invalid page request",
+  "status": 400,
+  "detail": "limit must be between 1 and 100 (was 500)"
+}
+```
+
+The `detail` field always describes the exact reason — out-of-range
+`offset` / `limit`, malformed `sort` entry, unknown sort field, or
+unknown direction.
