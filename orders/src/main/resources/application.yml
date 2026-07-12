@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: orders
+  datasource:
+    url: jdbc:postgresql://localhost:5438/orders_db
+    username: orders_user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9080/realms/churiservicesv2
+          jwk-set-uri: http://localhost:9080/realms/churiservicesv2/protocol/openid-connect/certs
+
+server:
+  port: 8082
+
+info:
+  app:
+    name: churiservices-orders
+    dependencies:
+      database:
+        name: churiservices-orders-db
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  dir: ./logs
+  redaction:
+    denylist: authorization,password,token,secret,apiKey,creditCard,ssn
