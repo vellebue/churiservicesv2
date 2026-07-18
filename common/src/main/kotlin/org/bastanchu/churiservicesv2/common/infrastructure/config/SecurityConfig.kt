@@ -29,7 +29,8 @@ class SecurityConfig {
                         "/swagger-ui/**",
                         "/actuator/**",
                         "/api/ping",
-                        "/api/ping/**"
+                        "/api/ping/**",
+                        "/error"
                     ).permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()
