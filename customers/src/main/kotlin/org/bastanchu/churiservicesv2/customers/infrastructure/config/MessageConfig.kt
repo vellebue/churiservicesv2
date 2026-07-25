@@ -15,7 +15,7 @@ class MessageConfig {
     fun messageSource(): MessageSource {
         val messageSource = ReloadableResourceBundleMessageSource()
         messageSource.setBasename("classpath:messages")
-        messageSource.setDefaultEncoding("UTF-8")
+        messageSource.setDefaultEncoding("ISO-8859-1")
         return messageSource
     }
 

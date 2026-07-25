@@ -2,6 +2,8 @@ package org.bastanchu.churiservicesv2.articles.infrastructure.web
 
 import org.bastanchu.churiservicesv2.articles.domain.exception.ArticleNotFoundException
 import org.bastanchu.churiservicesv2.articles.domain.exception.InvalidArticleException
+import org.bastanchu.churiservicesv2.articles.domain.exception.InvalidPriceConditionException
+import org.bastanchu.churiservicesv2.articles.domain.exception.PriceConditionNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -21,6 +23,18 @@ class GlobalExceptionHandler {
     fun handleInvalidArticle(ex: InvalidArticleException): ResponseEntity<ErrorResponse> {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(error = "Bad Request", message = ex.message ?: "Invalid article"))
+    }
+
+    @ExceptionHandler(PriceConditionNotFoundException::class)
+    fun handlePriceConditionNotFound(ex: PriceConditionNotFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(error = "Not Found", message = ex.message ?: "Price condition not found"))
+    }
+
+    @ExceptionHandler(InvalidPriceConditionException::class)
+    fun handleInvalidPriceCondition(ex: InvalidPriceConditionException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(error = "Bad Request", message = ex.message ?: "Invalid price condition"))
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
