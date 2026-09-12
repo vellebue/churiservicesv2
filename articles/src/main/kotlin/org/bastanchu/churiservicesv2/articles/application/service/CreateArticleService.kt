@@ -7,6 +7,7 @@ import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
 import org.bastanchu.churiservicesv2.articles.domain.ArticleUnitRepository
+import org.bastanchu.churiservicesv2.articles.domain.PriceConditionRepository
 import org.bastanchu.churiservicesv2.articles.domain.exception.InvalidArticleException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class CreateArticleService(
     private val articleRepository: ArticleRepository,
-    private val articleUnitRepository: ArticleUnitRepository
+    private val articleUnitRepository: ArticleUnitRepository,
+    private val priceConditionRepository: PriceConditionRepository
 ) : CreateArticleUseCase {
 
     override fun execute(command: CreateArticleCommand): ArticleDto {
@@ -37,11 +39,14 @@ class CreateArticleService(
                     conversionFactor = fmt.conversionFactor,
                     articleUnitId = fmt.articleUnitId
                 )
-            }
+            },
+            priceConditionIds = command.priceConditionIds
         )
 
         val saved = articleRepository.save(article)
-        return saved.toDto()
+        val priceConditions = priceConditionRepository.findAllByArticleId(saved.id!!)
+            .map { it.toDto() }
+        return saved.toDto(priceConditions)
     }
 
     private fun validateValidityDates(begin: java.time.LocalDate, end: java.time.LocalDate?) {

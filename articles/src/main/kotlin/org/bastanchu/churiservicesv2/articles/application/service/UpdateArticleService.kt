@@ -7,6 +7,7 @@ import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
 import org.bastanchu.churiservicesv2.articles.domain.ArticleUnitRepository
+import org.bastanchu.churiservicesv2.articles.domain.PriceConditionRepository
 import org.bastanchu.churiservicesv2.articles.domain.exception.ArticleNotFoundException
 import org.bastanchu.churiservicesv2.articles.domain.exception.InvalidArticleException
 import org.springframework.stereotype.Service
@@ -16,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class UpdateArticleService(
     private val articleRepository: ArticleRepository,
-    private val articleUnitRepository: ArticleUnitRepository
+    private val articleUnitRepository: ArticleUnitRepository,
+    private val priceConditionRepository: PriceConditionRepository
 ) : UpdateArticleUseCase {
 
     override fun execute(id: Long, command: UpdateArticleCommand): ArticleDto {
@@ -42,11 +44,14 @@ class UpdateArticleService(
                     conversionFactor = fmt.conversionFactor,
                     articleUnitId = fmt.articleUnitId
                 )
-            }
+            },
+            priceConditionIds = command.priceConditionIds
         )
 
         val saved = articleRepository.save(updatedArticle)
-        return saved.toDto()
+        val priceConditions = priceConditionRepository.findAllByArticleId(saved.id!!)
+            .map { it.toDto() }
+        return saved.toDto(priceConditions)
     }
 
     private fun validateValidityDates(begin: java.time.LocalDate, end: java.time.LocalDate?) {

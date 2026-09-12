@@ -23,5 +23,7 @@ data class CreateArticleCommand(
 
     @field:NotEmpty
     @field:Valid
-    val formats: List<ArticleFormatCommand>
+    val formats: List<ArticleFormatCommand>,
+
+    val priceConditionIds: List<Long> = emptyList()
 )

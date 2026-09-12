@@ -9,4 +9,5 @@ interface PriceConditionRepository {
     fun save(priceCondition: PriceCondition): PriceCondition
     fun deleteById(conditionId: Long)
     fun findByFilter(filter: PriceConditionFilter, pageRequest: PageRequest): FilteredPage<PriceCondition>
+    fun findAllByArticleId(articleId: Long): List<PriceCondition>
 }

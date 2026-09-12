@@ -8,6 +8,8 @@ import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
 import org.bastanchu.churiservicesv2.articles.domain.ArticleUnit
 import org.bastanchu.churiservicesv2.articles.domain.ArticleUnitRepository
+import org.bastanchu.churiservicesv2.articles.domain.PriceCondition
+import org.bastanchu.churiservicesv2.articles.domain.PriceConditionRepository
 import org.bastanchu.churiservicesv2.articles.domain.exception.ArticleNotFoundException
 import org.bastanchu.churiservicesv2.articles.domain.exception.InvalidArticleException
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -31,6 +33,9 @@ class UpdateArticleUseCaseTest {
 
     @Mock
     private lateinit var articleUnitRepository: ArticleUnitRepository
+
+    @Mock
+    private lateinit var priceConditionRepository: PriceConditionRepository
 
     @InjectMocks
     private lateinit var useCase: UpdateArticleService
@@ -150,5 +155,46 @@ class UpdateArticleUseCaseTest {
         assertThrows(InvalidArticleException::class.java) {
             useCase.execute(1L, command)
         }
+    }
+
+    @Test
+    fun `should update article with price condition links and populate them on response`() {
+        val updatedArticle = Article(
+            id = 1L,
+            articleId = "ART001",
+            articleName = "Updated Name",
+            beginValidityDate = beginValidity,
+            endValidityDate = endValidity,
+            formats = listOf(
+                ArticleFormat(
+                    id = 2L, description = "Box", referenceUnit = true,
+                    eanCode = "9876543210123", eanType = "EAN13", saleUnit = true,
+                    conversionFactor = BigDecimal.TEN, articleUnitId = "BX"
+                )
+            ),
+            priceConditionIds = listOf(42L)
+        )
+        val priceConditions = listOf(
+            PriceCondition(
+                conditionId = 42L,
+                subtypeId = 5L,
+                scope = 'A',
+                evaluation = 'P',
+                description = "Linked condition",
+                values = emptyList()
+            )
+        )
+
+        `when`(articleRepository.findById(1L)).thenReturn(existingArticle)
+        `when`(articleUnitRepository.findBySymbol("BX"))
+            .thenReturn(ArticleUnit(symbol = "BX", description = "Box", translationKey = "article.unit.bx"))
+        whenever(articleRepository.save(any())).thenReturn(updatedArticle)
+        whenever(priceConditionRepository.findAllByArticleId(1L)).thenReturn(priceConditions)
+
+        val result = useCase.execute(1L, validCommand.copy(priceConditionIds = listOf(42L)))
+
+        assertEquals(1, result.priceConditions.size)
+        assertEquals(42L, result.priceConditions[0].conditionId)
+        assertEquals("Linked condition", result.priceConditions[0].description)
     }
 }

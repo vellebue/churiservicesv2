@@ -26,4 +26,10 @@ interface PriceConditionJpaRepository : JpaRepository<PriceConditionJpaEntity, L
         @Param("endDate") endDate: LocalDate?,
         pageable: Pageable
     ): List<PriceConditionJpaEntity>
+
+    @Query(
+        "SELECT DISTINCT pc FROM ArticleJpaEntity a JOIN a.priceConditions pc " +
+            "LEFT JOIN FETCH pc.values WHERE a.id = :articleId"
+    )
+    fun findAllByArticleId(@Param("articleId") articleId: Long): List<PriceConditionJpaEntity>
 }

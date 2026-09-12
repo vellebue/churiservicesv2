@@ -4,15 +4,19 @@ import org.bastanchu.churiservicesv2.articles.application.service.GetArticleById
 import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
+import org.bastanchu.churiservicesv2.articles.domain.PriceCondition
+import org.bastanchu.churiservicesv2.articles.domain.PriceConditionRepository
 import org.bastanchu.churiservicesv2.articles.domain.exception.ArticleNotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -21,6 +25,9 @@ class GetArticleByIdUseCaseTest {
 
     @Mock
     private lateinit var articleRepository: ArticleRepository
+
+    @Mock
+    private lateinit var priceConditionRepository: PriceConditionRepository
 
     @InjectMocks
     private lateinit var useCase: GetArticleByIdService
@@ -88,5 +95,37 @@ class GetArticleByIdUseCaseTest {
         assertThrows(ArticleNotFoundException::class.java) {
             useCase.execute(99L)
         }
+    }
+
+    @Test
+    fun `should populate price conditions when article has links`() {
+        `when`(articleRepository.findById(1L)).thenReturn(existingArticle)
+        whenever(priceConditionRepository.findAllByArticleId(1L)).thenReturn(
+            listOf(
+                PriceCondition(
+                    conditionId = 7L,
+                    subtypeId = 1L,
+                    scope = 'A',
+                    evaluation = 'P',
+                    description = "Some condition",
+                    values = emptyList()
+                )
+            )
+        )
+
+        val result = useCase.execute(1L)
+
+        assertEquals(1, result.priceConditions.size)
+        assertEquals(7L, result.priceConditions[0].conditionId)
+    }
+
+    @Test
+    fun `should keep price conditions empty when article has no links`() {
+        `when`(articleRepository.findById(1L)).thenReturn(existingArticle)
+        whenever(priceConditionRepository.findAllByArticleId(1L)).thenReturn(emptyList())
+
+        val result = useCase.execute(1L)
+
+        assertTrue(result.priceConditions.isEmpty())
     }
 }

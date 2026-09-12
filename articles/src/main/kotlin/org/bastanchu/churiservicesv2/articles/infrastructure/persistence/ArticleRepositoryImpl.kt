@@ -8,7 +8,8 @@ import java.time.LocalDate
 
 @Repository
 class ArticleRepositoryImpl(
-    private val jpaRepository: ArticleJpaRepository
+    private val jpaRepository: ArticleJpaRepository,
+    private val priceConditionJpaRepository: PriceConditionJpaRepository
 ) : ArticleRepository {
 
     override fun save(article: Article): Article {
@@ -22,6 +23,8 @@ class ArticleRepositoryImpl(
             article.formats.forEach { fmt ->
                 existing.formats.add(fmt.toJpaEntity(existing))
             }
+            existing.priceConditions.clear()
+            existing.priceConditions.addAll(resolvePriceConditions(article.priceConditionIds))
             existing
         } else {
             val newEntity = ArticleJpaEntity(
@@ -33,6 +36,7 @@ class ArticleRepositoryImpl(
             article.formats.forEach { fmt ->
                 newEntity.formats.add(fmt.toJpaEntity(newEntity))
             }
+            newEntity.priceConditions.addAll(resolvePriceConditions(article.priceConditionIds))
             newEntity
         }
 
@@ -59,13 +63,23 @@ class ArticleRepositoryImpl(
             .map { it.toDomain() }
     }
 
+    private fun resolvePriceConditions(ids: List<Long>): List<PriceConditionJpaEntity> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.map { id ->
+            priceConditionJpaRepository.findById(id).orElseThrow {
+                IllegalArgumentException("Price condition with id $id does not exist")
+            }
+        }
+    }
+
     private fun ArticleJpaEntity.toDomain(): Article = Article(
         id = id,
         articleId = articleId,
         articleName = articleName,
         beginValidityDate = beginValidityDate,
         endValidityDate = endValidityDate,
-        formats = formats.map { it.toDomain() }
+        formats = formats.map { it.toDomain() },
+        priceConditionIds = priceConditions.map { it.conditionId }
     )
 
     private fun ArticleFormatJpaEntity.toDomain(): ArticleFormat = ArticleFormat(

@@ -50,6 +50,10 @@ class PriceConditionRepositoryImpl(
         jpaRepository.deleteById(conditionId)
     }
 
+    override fun findAllByArticleId(articleId: Long): List<PriceCondition> {
+        return jpaRepository.findAllByArticleId(articleId).map { it.toDomain() }
+    }
+
     override fun findByFilter(filter: PriceConditionFilter, pageRequest: PageRequest): FilteredPage<PriceCondition> {
         val descriptionPattern = filter.descriptionPattern?.replace('*', '%')
         val rows = jpaRepository.findByFilter(

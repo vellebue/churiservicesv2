@@ -8,5 +8,6 @@ data class ArticleDto(
     val articleName: String,
     val beginValidityDate: LocalDate,
     val endValidityDate: LocalDate? = null,
-    val formats: List<ArticleFormatDto>
+    val formats: List<ArticleFormatDto>,
+    val priceConditions: List<PriceConditionDto> = emptyList()
 )

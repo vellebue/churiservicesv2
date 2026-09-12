@@ -2,16 +2,18 @@ package org.bastanchu.churiservicesv2.articles.application.service
 
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleDto
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleFormatDto
+import org.bastanchu.churiservicesv2.articles.application.dto.PriceConditionDto
 import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 
-fun Article.toDto(): ArticleDto = ArticleDto(
+fun Article.toDto(priceConditions: List<PriceConditionDto> = emptyList()): ArticleDto = ArticleDto(
     id = id!!,
     articleId = articleId,
     articleName = articleName,
     beginValidityDate = beginValidityDate,
     endValidityDate = endValidityDate,
-    formats = formats.map { it.toDto() }
+    formats = formats.map { it.toDto() },
+    priceConditions = priceConditions
 )
 
 fun ArticleFormat.toDto(): ArticleFormatDto = ArticleFormatDto(
