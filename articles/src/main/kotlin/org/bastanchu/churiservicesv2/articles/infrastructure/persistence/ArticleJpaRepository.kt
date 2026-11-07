@@ -1,5 +1,6 @@
 package org.bastanchu.churiservicesv2.articles.infrastructure.persistence
 
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -16,6 +17,7 @@ interface ArticleJpaRepository : JpaRepository<ArticleJpaEntity, Long> {
     fun findByFilter(
         @Param("articleId") articleId: String?,
         @Param("articleName") articleName: String?,
-        @Param("referenceDate") referenceDate: LocalDate
+        @Param("referenceDate") referenceDate: LocalDate,
+        pageable: Pageable
     ): List<ArticleJpaEntity>
 }

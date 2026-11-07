@@ -3,6 +3,10 @@ package org.bastanchu.churiservicesv2.articles.infrastructure.persistence
 import org.bastanchu.churiservicesv2.articles.domain.Article
 import org.bastanchu.churiservicesv2.articles.domain.ArticleFormat
 import org.bastanchu.churiservicesv2.articles.domain.ArticleRepository
+import org.bastanchu.churiservicesv2.common.domain.pagination.FilteredPage
+import org.bastanchu.churiservicesv2.common.domain.pagination.PageRequest
+import org.bastanchu.churiservicesv2.common.infrastructure.persistence.pagination.toFilteredPage
+import org.bastanchu.churiservicesv2.common.infrastructure.persistence.pagination.toPageable
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 
@@ -55,12 +59,18 @@ class ArticleRepositoryImpl(
     override fun findByFilter(
         articleIdPattern: String?,
         articleNamePattern: String?,
-        referenceDate: LocalDate
-    ): List<Article> {
+        referenceDate: LocalDate,
+        pageRequest: PageRequest
+    ): FilteredPage<Article> {
         val sqlArticleId = articleIdPattern?.replace('*', '%')
         val sqlArticleName = articleNamePattern?.replace('*', '%')
-        return jpaRepository.findByFilter(sqlArticleId, sqlArticleName, referenceDate)
-            .map { it.toDomain() }
+        val rows = jpaRepository.findByFilter(
+            articleId = sqlArticleId,
+            articleName = sqlArticleName,
+            referenceDate = referenceDate,
+            pageable = pageRequest.toPageable()
+        )
+        return rows.toFilteredPage(pageRequest) { it.toDomain() }
     }
 
     private fun resolvePriceConditions(ids: List<Long>): List<PriceConditionJpaEntity> {

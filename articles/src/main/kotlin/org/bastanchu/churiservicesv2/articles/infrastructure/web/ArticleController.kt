@@ -14,7 +14,10 @@ import org.bastanchu.churiservicesv2.articles.application.command.CreateArticleC
 import org.bastanchu.churiservicesv2.articles.application.command.UpdateArticleCommand
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleDto
 import org.bastanchu.churiservicesv2.articles.application.dto.ArticleFilterDto
+import org.bastanchu.churiservicesv2.common.domain.pagination.FilteredPage
 import org.bastanchu.churiservicesv2.common.infrastructure.logging.LogEntry
+import org.bastanchu.churiservicesv2.common.infrastructure.web.pagination.PageQueryParams
+import org.springdoc.core.annotations.ParameterObject
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -82,13 +85,17 @@ class ArticleController(
     }
 
     @GetMapping
-    @Operation(summary = "Query articles by filter", description = "Use '*' as wildcard in articleId and articleName")
-    @ApiResponse(responseCode = "200", description = "List of matching articles")
+    @Operation(
+        summary = "Query articles by filter",
+        description = "Paged listing. Use '*' as wildcard in articleId and articleName."
+    )
+    @ApiResponse(responseCode = "200", description = "Paged list of matching articles")
     fun getByFilter(
         @RequestParam(required = false) articleId: String?,
-        @RequestParam(required = false) articleName: String?
-    ): ResponseEntity<List<ArticleDto>> {
+        @RequestParam(required = false) articleName: String?,
+        @ParameterObject @Valid page: PageQueryParams
+    ): ResponseEntity<FilteredPage<ArticleDto>> {
         val filter = ArticleFilterDto(articleId = articleId, articleName = articleName)
-        return ResponseEntity.ok(getArticlesByFilterUseCase.execute(filter))
+        return ResponseEntity.ok(getArticlesByFilterUseCase.execute(filter, page.toPageRequest()))
     }
 }

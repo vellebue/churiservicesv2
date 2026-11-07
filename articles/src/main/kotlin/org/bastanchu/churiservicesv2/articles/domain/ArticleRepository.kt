@@ -1,5 +1,7 @@
 package org.bastanchu.churiservicesv2.articles.domain
 
+import org.bastanchu.churiservicesv2.common.domain.pagination.FilteredPage
+import org.bastanchu.churiservicesv2.common.domain.pagination.PageRequest
 import java.time.LocalDate
 
 interface ArticleRepository {
@@ -9,6 +11,7 @@ interface ArticleRepository {
     fun findByFilter(
         articleIdPattern: String?,
         articleNamePattern: String?,
-        referenceDate: LocalDate
-    ): List<Article>
+        referenceDate: LocalDate,
+        pageRequest: PageRequest
+    ): FilteredPage<Article>
 }
